@@ -136,5 +136,4 @@ class ModelParserTest {
         );
         System.out.println("Model 04: "+workflow);
     }
-
 }
