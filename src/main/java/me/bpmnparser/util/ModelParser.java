@@ -1,5 +1,6 @@
-package org.example;
+package me.bpmnparser.util;
 
+import me.bpmnparser.model.*;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.*;
@@ -8,103 +9,137 @@ import org.camunda.bpm.model.bpmn.instance.camunda.CamundaProperties;
 import org.camunda.bpm.model.bpmn.instance.camunda.CamundaProperty;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 import org.camunda.bpm.model.xml.type.ModelElementType;
-import org.example.model.*;
 
-import java.io.File;
+import java.io.InputStream;
 import java.util.*;
 
 import static java.util.Objects.nonNull;
 
 public class ModelParser {
 
-    public static Workflow parser(File model) {
+    public static Workflow parser(InputStream modelStream, String externalConfigPath) {
 
-        Workflow workflow = null;
+        BpmnPropertiesConfig config = ConfigLoader.loadConfig(externalConfigPath);
+        BpmnPropertiesLoader bpmnProperties = new BpmnPropertiesLoader(config);
         String workflowName = null;
-        String worflowId = null;
+        String workflowId = null;
         String workflowVersion = null;
         String workflowDocumentation = null;
         String processType = null;
         String processSubtype = null;
         List<Stage> stages = new ArrayList<Stage>();
         List<Inconsistency> inconsistencies = new ArrayList<>();
-        Map<String,Node> nodeMap = new HashMap<>();
+        Map<String, Node> nodeMap = new HashMap<>();
         Map<SequenceFlow,Conclusion> conclusionMap = new HashMap<>();
 
-        BpmnModelInstance modelInstance = Bpmn.readModelFromFile(model);
+        BpmnModelInstance modelInstance = Bpmn.readModelFromStream(modelStream);
         // find all elements of the type Participant
         ModelElementType participantType = modelInstance.getModel().getType(Participant.class);
         Collection<ModelElementInstance> participants = modelInstance.getModelElementsByType(participantType);
 
-        for (ModelElementInstance p : participants) {
-            Participant participant = (Participant) p;
-            workflowName = participant.getName();
+        if (participants.isEmpty()) {
+            if (bpmnProperties.getParticipant("presence").isRequired()) {
+                inconsistencies.add(new Inconsistency(100, "At least one element 'Participant' is required"));
+            }
+        } else {
 
-            // inconsistency: 1
-            if (workflowName == null || workflowName.isEmpty())
-                inconsistencies.add(new Inconsistency(1,"Missing attribute 'Name' in element " + participant.getId()));
+            for (ModelElementInstance p : participants) {
+                Participant participant = (Participant) p;
+                workflowName = participant.getName();
 
-            Process process = participant.getProcess();
-            if (nonNull(process)) {
-                worflowId = process.getId();
+                if (bpmnProperties.getParticipant("name").isRequired())
+                    // inconsistency: 1
+                    if (workflowName == null || workflowName.isEmpty())
+                        inconsistencies.add(new Inconsistency(1, "Missing attribute 'Name' in element " + participant.getId()));
 
-                // inconsistency: 2
-                if (worflowId == null || worflowId.isEmpty())
-                    inconsistencies.add(new Inconsistency(2,"Missing attribute 'Process ID' in element " + participant.getId()));
+                Process process = participant.getProcess();
+                if (nonNull(process)) {
 
-                workflowVersion = process.getCamundaVersionTag();
+                    workflowId = process.getId();
+                    // inconsistency: 2
+                    if (bpmnProperties.getProcess("id").isRequired()) {
+                        if (workflowId == null || workflowId.isEmpty())
+                            inconsistencies.add(new Inconsistency(2, "Missing attribute 'Process ID' in element " + participant.getId()));
+                    }
 
-                // inconsistency: 3
-                if (workflowVersion == null || workflowVersion.isEmpty())
-                    inconsistencies.add(new Inconsistency(3,"Missing attribute 'Version tag' in element " + participant.getId()));
+                    workflowVersion = process.getCamundaVersionTag();
+                    // inconsistency: 3
+                    if (bpmnProperties.getProcess("camunda:versionTag").isRequired()) {
+                        if (workflowVersion == null || workflowVersion.isEmpty())
+                            inconsistencies.add(new Inconsistency(3, "Missing attribute 'Version tag' in element " + participant.getId()));
+                    }
 
-                Collection<Documentation> documentations = process.getDocumentations();
-                for (Documentation doc : documentations) {
-                    workflowDocumentation = doc.getTextContent();
-
-                    // inconsistency: 4
-                    if (workflowDocumentation == null || workflowDocumentation.isEmpty())
-                        inconsistencies.add(new Inconsistency(4,"Missing attribute 'Process Documentation' in element " + participant.getId()));
-
-                }
-
-                Map<String, String> processAttributes = getAttributes(process);
-                processType = processAttributes.get("process_type");
-
-                // inconsistency: 5
-                if (processType == null || processType.isEmpty())
-                    inconsistencies.add(new Inconsistency(5, "Missing extension property 'process_type' in element " + participant.getId()));
-
-                processSubtype = processAttributes.get("process_subtype");
-
-                // inconsistency: 6
-                if (processSubtype == null || processSubtype.isEmpty())
-                    inconsistencies.add(new Inconsistency(6, "Missing extension property 'process_subtype' in element " + participant.getId()));
-
-                Collection<LaneSet> laneSets = process.getLaneSets();
-                for (LaneSet laneSet : laneSets) {
-                    Collection<Lane> lanes = laneSet.getLanes();
-                    for (Lane lane : lanes) {
-                        Map<String, String> laneAttributes = getAttributes(lane);
-                        String stageCode = laneAttributes.get("stage");
-
-                        // inconsistency: 7
-                        if (stageCode == null || stageCode.isEmpty())
-                            inconsistencies.add(new Inconsistency(7, "Missing extension property 'stage' in element " + lane.getId()));
-
-                        String laneName = lane.getName();
-                        if (laneName != null && !laneName.isEmpty()) {
-                            Stage stage = new Stage(laneName,stageCode);
-                            stages.add(stage);
-                        } else {
-                            // inconsistency: 8
-                            inconsistencies.add(new Inconsistency(8,"Missing attribute 'name' in element " + lane.getId()));
+                    Collection<Documentation> documentations = process.getDocumentations();
+                    if (documentations.isEmpty()) {
+                        if (bpmnProperties.getProcess("documentation").isRequired()) {
+                            inconsistencies.add(new Inconsistency(101, "At least one nested element 'Documentation' is required in element " + participant.getId()));
                         }
+                    } else {
+                        for (Documentation doc : documentations) {
+                            workflowDocumentation = doc.getTextContent();
+                            // inconsistency: 4
+                            if (bpmnProperties.getProcess("documentation").isRequired()) {
+                                if (workflowDocumentation == null || workflowDocumentation.isEmpty())
+                                    inconsistencies.add(new Inconsistency(4, "Missing attribute 'Process Documentation' in element " + participant.getId()));
+                            }
+                        }
+                    }
+
+                    Map<String, String> processAttributes = getAttributes(process);
+
+                    processType = processAttributes.get("process_type");
+                    // inconsistency: 5
+                    if (bpmnProperties.getProcess("process_type").isRequired()) {
+                        if (processType == null || processType.isEmpty())
+                            inconsistencies.add(new Inconsistency(5, "Missing extension property 'process_type' in element " + participant.getId()));
+                    }
+
+                    processSubtype = processAttributes.get("process_subtype");
+                    // inconsistency: 6
+                    if (bpmnProperties.getProcess("process_subtype").isRequired()) {
+                        if (processSubtype == null || processSubtype.isEmpty())
+                            inconsistencies.add(new Inconsistency(6, "Missing extension property 'process_subtype' in element " + participant.getId()));
+                    }
+
+                    Collection<LaneSet> laneSets = process.getLaneSets();
+
+                    if (laneSets.isEmpty()) {
+                        if (bpmnProperties.getLane("presence").isRequired()) {
+                            inconsistencies.add(new Inconsistency(102, "At least one element 'Lane' is required"));
+                        }
+                    } else {
+                        for (LaneSet laneSet : laneSets) {
+                            Collection<Lane> lanes = laneSet.getLanes();
+                            for (Lane lane : lanes) {
+                                Map<String, String> laneAttributes = getAttributes(lane);
+
+                                String stageCode = laneAttributes.get("stage");
+                                // inconsistency: 7
+                                if (bpmnProperties.getLane("stage").isRequired()) {
+                                    if (stageCode == null || stageCode.isEmpty())
+                                        inconsistencies.add(new Inconsistency(7, "Missing extension property 'stage' in element " + lane.getId()));
+                                }
+                                String laneName = lane.getName();
+                                if (laneName != null && !laneName.isEmpty()) {
+                                    Stage stage = new Stage(laneName, stageCode);
+                                    stages.add(stage);
+                                } else {
+                                    if (bpmnProperties.getLane("name").isRequired()) {
+                                        // inconsistency: 8
+                                        inconsistencies.add(new Inconsistency(8, "Missing attribute 'name' in element " + lane.getId()));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    if (bpmnProperties.getProcess("presence").isRequired()) {
+                        inconsistencies.add(new Inconsistency(103, "Element 'Process' is required in collaboration with element" + participant.getId()));
                     }
                 }
             }
         }
-        workflow = new Workflow(workflowName,worflowId,workflowVersion,workflowDocumentation,processType,processSubtype);
+        Workflow workflow = new Workflow(workflowName, workflowId, workflowVersion, workflowDocumentation, processType, processSubtype);
         workflow.setStages(stages);
 
         // find all elements of the type FlowNode
@@ -122,25 +157,30 @@ public class ModelParser {
             if (flowNode instanceof Task) {
                 boolean ok = true;
 
-                // inconsistency: 9
-                if (name == null || name.isEmpty()) {
-                    inconsistencies.add(new Inconsistency(9, "Missing attribute 'name' in element " + flowNode.getId()));
-                    ok = false;
+                if (bpmnProperties.getTask("name").isRequired()) {
+                    // inconsistency: 9
+                    if (name == null || name.isEmpty()) {
+                        inconsistencies.add(new Inconsistency(9, "Missing attribute 'name' in element " + flowNode.getId()));
+                        ok = false;
+                    }
                 }
 
                 String stageCode = flowNodeAttributes.get("stage");
-                String activityCode = flowNodeAttributes.get("activity");
-
-                // inconsistency: 10
-                if (stageCode == null || stageCode.isEmpty()) {
-                    inconsistencies.add(new Inconsistency(10, "Missing extension property 'stage' in element " + flowNode.getId()));
-                    ok = false;
+                if (bpmnProperties.getTask("stage").isRequired()) {
+                    // inconsistency: 10
+                    if (stageCode == null || stageCode.isEmpty()) {
+                        inconsistencies.add(new Inconsistency(10, "Missing extension property 'stage' in element " + flowNode.getId()));
+                        ok = false;
+                    }
                 }
 
-                // inconsistency: 11
-                if (activityCode == null || activityCode.isEmpty()) {
-                    inconsistencies.add(new Inconsistency(11, "Missing extension property 'activity' in element " + flowNode.getId()));
-                    ok = false;
+                String activityCode = flowNodeAttributes.get("activity");
+                if (bpmnProperties.getTask("activity").isRequired()) {
+                    // inconsistency: 11
+                    if (activityCode == null || activityCode.isEmpty()) {
+                        inconsistencies.add(new Inconsistency(11, "Missing extension property 'activity' in element " + flowNode.getId()));
+                        ok = false;
+                    }
                 }
 
                 if (ok) {
@@ -150,16 +190,27 @@ public class ModelParser {
                 }
             }
 
-            if (flowNode instanceof EndEvent || flowNode instanceof StartEvent) {
-                String processStatus = flowNodeAttributes.get("process_status");
-
-                // inconsistency: 12
-                if (processStatus == null || processStatus.isEmpty())
-                    inconsistencies.add(new Inconsistency(12, "Missing extension property 'process_status' in element " + flowNode.getId()));
-
+            String processStatus = flowNodeAttributes.get("process_status");
+            if (flowNode instanceof StartEvent) {
+                if (bpmnProperties.getStartEvent("process_status").isRequired()) {
+                    // inconsistency: 12
+                    if (processStatus == null || processStatus.isEmpty())
+                        inconsistencies.add(new Inconsistency(12, "Missing extension property 'process_status' in element " + flowNode.getId()));
+                }
                 StartEndNode startEndNode = new StartEndNode(name,documentation,processStatus);
                 nodeMap.put(id,startEndNode);
             }
+
+            if (flowNode instanceof EndEvent) {
+                if (bpmnProperties.getEndEvent("process_status").isRequired()) {
+                    // inconsistency: 12
+                    if (processStatus == null || processStatus.isEmpty())
+                        inconsistencies.add(new Inconsistency(12, "Missing extension property 'process_status' in element " + flowNode.getId()));
+                }
+                StartEndNode startEndNode = new StartEndNode(name,documentation,processStatus);
+                nodeMap.put(id,startEndNode);
+            }
+
         }
 
         // find all elements of the type ExclusiveGateway
@@ -181,23 +232,26 @@ public class ModelParser {
                     String idSource = sourceNode.getAttributeValue("id");
                     ActivityNode activityNode = (ActivityNode)nodeMap.get(idSource);
                     if (activityNode != null) {
-                        List<Conclusion> conclusions = new ArrayList<>();
                         for (SequenceFlow sequenceFlow : exclusiveGateway.getOutgoing()) {
                             String conclusionName = sequenceFlow.getName();
                             Map<String, String> sequenceFlowAttributes = getAttributes(sequenceFlow);
                             String conclusionCode = sequenceFlowAttributes.get("conclusion");
                             boolean ok = true;
 
-                            // inconsistency: 13
-                            if (conclusionName == null || conclusionName.isEmpty()) {
-                                inconsistencies.add(new Inconsistency(13, "Missing attribute 'name' in element " + sequenceFlow.getId()));
-                                ok = false;
+                            if (bpmnProperties.getSequenceFlow("name").isRequired()) {
+                                // inconsistency: 13
+                                if (conclusionName == null || conclusionName.isEmpty()) {
+                                    inconsistencies.add(new Inconsistency(13, "Missing attribute 'name' in element " + sequenceFlow.getId()));
+                                    ok = false;
+                                }
                             }
 
-                            // inconsistency: 14
-                            if (conclusionCode == null || conclusionCode.isEmpty()) {
-                                inconsistencies.add(new Inconsistency(14, "Missing extension property 'conclusion' in element " + sequenceFlow.getId()));
-                                ok = false;
+                            if (bpmnProperties.getSequenceFlow("conclusion").isRequired()) {
+                                // inconsistency: 14
+                                if (conclusionCode == null || conclusionCode.isEmpty()) {
+                                    inconsistencies.add(new Inconsistency(14, "Missing extension property 'conclusion' in element " + sequenceFlow.getId()));
+                                    ok = false;
+                                }
                             }
 
                             if (ok) {

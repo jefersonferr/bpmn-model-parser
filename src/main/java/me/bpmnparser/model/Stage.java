@@ -1,4 +1,4 @@
-package org.example.model;
+package me.bpmnparser.model;
 
 import lombok.Getter;
 import lombok.Setter;
