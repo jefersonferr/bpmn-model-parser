@@ -1,0 +1,14 @@
+org\bpmnparser\model\WorkflowRule.class
+org\bpmnparser\Main.class
+org\bpmnparser\model\ActivityNode.class
+org\bpmnparser\util\ModelProperty.class
+org\bpmnparser\util\BpmnPropertiesConfig.class
+org\bpmnparser\model\Workflow.class
+org\bpmnparser\model\StartEndNode.class
+org\bpmnparser\util\BpmnPropertiesLoader.class
+org\bpmnparser\model\Inconsistency.class
+org\bpmnparser\util\ConfigLoader.class
+org\bpmnparser\model\Conclusion.class
+org\bpmnparser\model\Stage.class
+org\bpmnparser\model\Node.class
+org\bpmnparser\util\ModelParser.class
