@@ -76,23 +76,4 @@ public class ConfigLoader {
         property.setExtension(Boolean.TRUE.equals(propertyMap.get("extension")));
         return property;
     }
-
-    public static void main(String[] args) {
-        String externalConfigPath = "C:\\Users\\jeferson.ferreira.SONDA_USUARIOS\\IdeaProjects\\external-config\\config.yaml";
-        BpmnPropertiesConfig config = loadConfig(externalConfigPath);
-
-        Map<String, List<ModelProperty>> properties = config.getExtensionProperties();
-
-         for (Map.Entry<String, List<ModelProperty>> entry : properties.entrySet()) {
-             String elementType = entry.getKey();
-             System.out.println("Element Type: " + elementType);
-
-             for (ModelProperty property : entry.getValue()) {
-                 System.out.println("  - Property: " + property.getName());
-                 System.out.println("    Required: " + property.isRequired());
-                 System.out.println("    Extension: " + property.isExtension());
-             }
-         }
-
-    }
 }

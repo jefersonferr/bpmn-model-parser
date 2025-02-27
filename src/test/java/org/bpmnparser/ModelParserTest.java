@@ -14,14 +14,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ModelParserTest {
     static Workflow workflow;
-    static String configPath = "src/test/models/test_config.yaml";
+    static String configPath;
     InputStream modelStream = null;
 
     @Test
     @DisplayName("Test 01 - Model 01: Consistent")
     void test01() {
         try {
-            modelStream = Files.newInputStream(Path.of("src/test/models/model_01.bpmn"));
+            modelStream = Files.newInputStream(Path.of("src/test/resources/models/model_01.bpmn"));
+            configPath = "src/test/resources/config/test_config_01.yaml";
             workflow = parser(modelStream,configPath);
             assertAll(
                     "Grouped Assertions of Model 01",
@@ -82,7 +83,8 @@ class ModelParserTest {
     @DisplayName("Test 05 - Model 02: Inconsistencies 10,11, and 12")
     void test05() {
         try {
-            modelStream = Files.newInputStream(Path.of("src/test/models/model_02.bpmn"));
+            modelStream = Files.newInputStream(Path.of("src/test/resources/models/model_02.bpmn"));
+            configPath = "src/test/resources/config/test_config_01.yaml";
             workflow = parser(modelStream,configPath);
             assertAll(
                     "Grouped Assertions of Model 02",
@@ -101,7 +103,8 @@ class ModelParserTest {
     @DisplayName("Test 06 - Model 03: Consistent")
     void test06() {
         try {
-            modelStream = Files.newInputStream(Path.of("src/test/models/model_03.bpmn"));
+            modelStream = Files.newInputStream(Path.of("src/test/resources/models/model_03.bpmn"));
+            configPath = "src/test/resources/config/test_config_01.yaml";
             workflow = parser(modelStream,configPath);
             assertAll(
                     "Grouped Assertions of Model 03",
@@ -148,7 +151,8 @@ class ModelParserTest {
     @DisplayName("Test 09 - Model 04: Inconsistency 14")
     void test09() {
         try {
-            modelStream = Files.newInputStream(Path.of("src/test/models/model_04.bpmn"));
+            modelStream = Files.newInputStream(Path.of("src/test/resources/models/model_04.bpmn"));
+            configPath = "src/test/resources/config/test_config_01.yaml";
             workflow = parser(modelStream,configPath);
             assertAll(
                     "Grouped Assertions of Model 04",
@@ -162,4 +166,105 @@ class ModelParserTest {
             throw new RuntimeException(e);
         }
     }
+
+    @Test
+    @DisplayName("Test 10 - Model 05: Inconsistencies 1,3,5,6,101,102")
+    void test10() {
+        try {
+            modelStream = Files.newInputStream(Path.of("src/test/resources/models/model_05.bpmn"));
+            configPath = "src/test/resources/config/test_config_02.yaml";
+            workflow = parser(modelStream,configPath);
+            assertAll(
+                    "Grouped Assertions of Model 05",
+                    () -> assertEquals(0, workflow.stagesSize()),
+                    () -> assertEquals(6, workflow.inconsistenciesSize()),
+                    () -> assertEquals(2, workflow.activitiesSize()),
+                    () -> assertEquals(5, workflow.rulesSize())
+            );
+            System.out.println("Model 05: "+workflow);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    @DisplayName("Test 11 - Model 06: Inconsistencies 7,8,9,13")
+    void test11() {
+        try {
+            modelStream = Files.newInputStream(Path.of("src/test/resources/models/model_06.bpmn"));
+            configPath = "src/test/resources/config/test_config_02.yaml";
+            workflow = parser(modelStream,configPath);
+            assertAll(
+                    "Grouped Assertions of Model 06",
+                    () -> assertEquals(0, workflow.stagesSize()),
+                    () -> assertEquals(6, workflow.inconsistenciesSize()),
+                    () -> assertEquals(1, workflow.activitiesSize()),
+                    () -> assertEquals(4, workflow.rulesSize())
+            );
+            System.out.println("Model 06: "+workflow);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    @DisplayName("Test 12 - Model 07: Testing the config file yaml by relaxing the requirements")
+    void test12() {
+        try {
+            modelStream = Files.newInputStream(Path.of("src/test/resources/models/model_07.bpmn"));
+            configPath = "src/test/resources/config/test_config_03.yaml";
+            workflow = parser(modelStream,configPath);
+            assertAll(
+                    "Grouped Assertions of Model 07",
+                    () -> assertEquals(0, workflow.stagesSize()),
+                    () -> assertEquals(0, workflow.inconsistenciesSize()),
+                    () -> assertEquals(2, workflow.activitiesSize()),
+                    () -> assertEquals(5, workflow.rulesSize())
+            );
+            System.out.println("Model 07: "+workflow);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    @DisplayName("Test 13 - Model 08: Rule 04: Task -> Merge -> End, and Rule 06: Split -> Merge")
+    void test13() {
+        try {
+            modelStream = Files.newInputStream(Path.of("src/test/resources/models/model_08.bpmn"));
+            configPath = "src/test/resources/config/test_config_03.yaml";
+            workflow = parser(modelStream,configPath);
+            assertAll(
+                    "Grouped Assertions of Model 08",
+                    () -> assertEquals(7, workflow.stagesSize()),
+                    () -> assertEquals(0, workflow.inconsistenciesSize()),
+                    () -> assertEquals(14, workflow.activitiesSize()),
+                    () -> assertEquals(32, workflow.rulesSize())
+            );
+            System.out.println("Model 08: "+workflow);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    @DisplayName("Test 14 - Model 09: Rule 03")
+    void test14() {
+        try {
+            modelStream = Files.newInputStream(Path.of("src/test/resources/models/model_09.bpmn"));
+            configPath = "src/test/resources/config/test_config_01.yaml";
+            workflow = parser(modelStream,configPath);
+            assertAll(
+                    "Grouped Assertions of Model 09",
+                    () -> assertEquals(3, workflow.stagesSize()),
+                    () -> assertEquals(0, workflow.inconsistenciesSize()),
+                    () -> assertEquals(4, workflow.activitiesSize()),
+                    () -> assertEquals(7, workflow.rulesSize())
+            );
+            System.out.println("Model 09: "+workflow);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }
