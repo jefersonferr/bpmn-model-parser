@@ -41,7 +41,7 @@ class ModelParserTest {
     @DisplayName("Test 02 - Rule 1: StartEvent -> Task = Initial rule")
     void test02() {
         // Rule 1 - StartEvent -> Task = Initial rule
-        var workflowRule = workflow.getRules().getFirst();
+        var workflowRule = workflow.getRules().get(0);
         assertAll(
                 "Grouped Assertions of Rule 1",
                 () -> assertNull(workflowRule.getSource()),
@@ -55,7 +55,7 @@ class ModelParserTest {
     @DisplayName("Test 03 - Rule 2: Task -> Task")
     void test03() {
         // Rule 7: Task -> EndEvent = Final rule B
-        var workflowRule = workflow.getRules().getLast();
+        var workflowRule = workflow.getRules().get(workflow.getRules().size() - 1);
         assertAll(
                 "Grouped Assertions of Rule 2",
                 () -> assertNotNull(workflowRule.getSource()),

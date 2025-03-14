@@ -7,20 +7,49 @@
     <groupId>org.bpmnparser</groupId>
     <artifactId>bpmn-model-parser</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>bpmn-model-parser</name>
+    <description>Parser for BPMN models</description>
+    <url>https://github.com/seu-usuario/bpmn-model-parser</url>
+
+    <developers>
+        <developer>
+            <id>jefersonferr</id>
+            <name>Jeferson Ferreira</name>
+            <url>https://github.com/jefersonferr</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/jefersonferr/bpmn-model-parser</url>
+        <connection>scm:git:git://github.com/jefersonferr/bpmn-model-parser.git</connection>
+        <developerConnection>scm:git:ssh://github.com/jefersonferr/bpmn-model-parser.git</developerConnection>
+    </scm>
 
     <properties>
-        <maven.compiler.source>23</maven.compiler.source>
-        <maven.compiler.target>23</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
+                <version>3.10.1</version>
                 <configuration>
+                    <source>17</source>
+                    <target>17</target>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
@@ -44,16 +73,6 @@
             </plugin>
         </plugins>
     </build>
-
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>3.8.0</version>
-            </plugin>
-        </plugins>
-    </reporting>
 
     <dependencies>
         <dependency>
