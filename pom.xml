@@ -74,6 +74,16 @@
         </plugins>
     </build>
 
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>3.6.2</version>
+            </plugin>
+        </plugins>
+    </reporting>
+
     <dependencies>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -97,6 +107,28 @@
             <artifactId>snakeyaml</artifactId>
             <version>2.0</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.maven.doxia/doxia-sink-api -->
+        <dependency>
+            <groupId>org.apache.maven.doxia</groupId>
+            <artifactId>doxia-sink-api</artifactId>
+            <version>1.7</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.codehaus.plexus</groupId>
+            <artifactId>plexus-utils</artifactId>
+            <version>3.5.0</version>
+        </dependency>
+
     </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/jefersonferr/bpmn-model-parser</url>
+        </repository>
+    </distributionManagement>
+
 
 </project>
