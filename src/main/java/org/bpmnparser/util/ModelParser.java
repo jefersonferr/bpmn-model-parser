@@ -85,18 +85,18 @@ public class ModelParser {
                         }
                     }
 
-                    Map<String, String> processAttributes = getAttributes(process);
+                    Map<String, String> processAttributes = getAttributes(participant);
 
                     processType = processAttributes.get("process_type");
                     // inconsistency: 5
-                    if (bpmnProperties.getProcess("process_type").isRequired()) {
+                    if (bpmnProperties.getParticipant("process_type").isRequired()) {
                         if (processType == null || processType.isEmpty())
                             inconsistencies.add(new Inconsistency(5, "Missing extension property 'process_type' in element " + participant.getId()));
                     }
 
                     processSubtype = processAttributes.get("process_subtype");
                     // inconsistency: 6
-                    if (bpmnProperties.getProcess("process_subtype").isRequired()) {
+                    if (bpmnProperties.getParticipant("process_subtype").isRequired()) {
                         if (processSubtype == null || processSubtype.isEmpty())
                             inconsistencies.add(new Inconsistency(6, "Missing extension property 'process_subtype' in element " + participant.getId()));
                     }
