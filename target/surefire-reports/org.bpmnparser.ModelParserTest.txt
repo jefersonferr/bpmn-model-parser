@@ -1,4 +1,44 @@
 -------------------------------------------------------------------------------
 Test set: org.bpmnparser.ModelParserTest
 -------------------------------------------------------------------------------
-Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.304 s -- in org.bpmnparser.ModelParserTest
+Tests run: 14, Failures: 0, Errors: 5, Skipped: 0, Time elapsed: 0.662 s <<< FAILURE! -- in org.bpmnparser.ModelParserTest
+org.bpmnparser.ModelParserTest.test10 -- Time elapsed: 0.030 s <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "org.bpmnparser.util.ModelProperty.isRequired()" because the return value of "org.bpmnparser.util.BpmnPropertiesLoader.getParticipant(String)" is null
+	at org.bpmnparser.util.ModelParser.parser(ModelParser.java:92)
+	at org.bpmnparser.ModelParserTest.test10(ModelParserTest.java:176)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+org.bpmnparser.ModelParserTest.test11 -- Time elapsed: 0.027 s <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "org.bpmnparser.util.ModelProperty.isRequired()" because the return value of "org.bpmnparser.util.BpmnPropertiesLoader.getParticipant(String)" is null
+	at org.bpmnparser.util.ModelParser.parser(ModelParser.java:92)
+	at org.bpmnparser.ModelParserTest.test11(ModelParserTest.java:196)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+org.bpmnparser.ModelParserTest.test12 -- Time elapsed: 0.020 s <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "org.bpmnparser.util.ModelProperty.isRequired()" because the return value of "org.bpmnparser.util.BpmnPropertiesLoader.getParticipant(String)" is null
+	at org.bpmnparser.util.ModelParser.parser(ModelParser.java:92)
+	at org.bpmnparser.ModelParserTest.test12(ModelParserTest.java:216)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+org.bpmnparser.ModelParserTest.test13 -- Time elapsed: 0.033 s <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "org.bpmnparser.util.ModelProperty.isRequired()" because the return value of "org.bpmnparser.util.BpmnPropertiesLoader.getParticipant(String)" is null
+	at org.bpmnparser.util.ModelParser.parser(ModelParser.java:92)
+	at org.bpmnparser.ModelParserTest.test13(ModelParserTest.java:236)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+org.bpmnparser.ModelParserTest.test14 -- Time elapsed: 0.026 s <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "org.bpmnparser.util.ModelProperty.isRequired()" because the return value of "org.bpmnparser.util.BpmnPropertiesLoader.getParticipant(String)" is null
+	at org.bpmnparser.util.ModelParser.parser(ModelParser.java:92)
+	at org.bpmnparser.ModelParserTest.test14(ModelParserTest.java:256)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+

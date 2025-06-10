@@ -197,7 +197,7 @@ class ModelParserTest {
             assertAll(
                     "Grouped Assertions of Model 06",
                     () -> assertEquals(0, workflow.stagesSize()),
-                    () -> assertEquals(6, workflow.inconsistenciesSize()),
+                    () -> assertEquals(8, workflow.inconsistenciesSize()),
                     () -> assertEquals(1, workflow.activitiesSize()),
                     () -> assertEquals(4, workflow.rulesSize())
             );
@@ -217,7 +217,7 @@ class ModelParserTest {
             assertAll(
                     "Grouped Assertions of Model 07",
                     () -> assertEquals(0, workflow.stagesSize()),
-                    () -> assertEquals(0, workflow.inconsistenciesSize()),
+                    () -> assertEquals(2, workflow.inconsistenciesSize()),
                     () -> assertEquals(2, workflow.activitiesSize()),
                     () -> assertEquals(5, workflow.rulesSize())
             );
@@ -237,7 +237,7 @@ class ModelParserTest {
             assertAll(
                     "Grouped Assertions of Model 08",
                     () -> assertEquals(7, workflow.stagesSize()),
-                    () -> assertEquals(0, workflow.inconsistenciesSize()),
+                    () -> assertEquals(2, workflow.inconsistenciesSize()),
                     () -> assertEquals(14, workflow.activitiesSize()),
                     () -> assertEquals(32, workflow.rulesSize())
             );
@@ -257,7 +257,7 @@ class ModelParserTest {
             assertAll(
                     "Grouped Assertions of Model 09",
                     () -> assertEquals(3, workflow.stagesSize()),
-                    () -> assertEquals(0, workflow.inconsistenciesSize()),
+                    () -> assertEquals(2, workflow.inconsistenciesSize()),
                     () -> assertEquals(4, workflow.activitiesSize()),
                     () -> assertEquals(7, workflow.rulesSize())
             );

@@ -9,6 +9,12 @@ bpmn_model_parser:
       - name: presence
         required: true
         extension: false
+      - name: process_type
+        required: true
+        extension: true
+      - name: process_subtype
+        required: true
+        extension: true
 
     process:
       - name: id
