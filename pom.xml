@@ -6,7 +6,7 @@
 
     <groupId>org.bpmnparser</groupId>
     <artifactId>bpmn-model-parser</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.2</version>
     <packaging>jar</packaging>
 
     <name>bpmn-model-parser</name>
