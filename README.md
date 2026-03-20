@@ -6,8 +6,6 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Maintained](https://img.shields.io/badge/maintained-yes-brightgreen)
 ![BPMN Support](https://img.shields.io/badge/BPMN-supported-brightgreen)
-![Build](https://img.shields.io/badge/build-passing-brightgreen)
-![Status](https://img.shields.io/badge/status-active-success)
 
 ---
 ## 📑 Table of Contents
