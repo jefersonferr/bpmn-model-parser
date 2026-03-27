@@ -1,6 +1,7 @@
 package org.bpmnparser.util;
 
 import org.bpmnparser.model.*;
+import static org.bpmnparser.model.RuleType.*;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.*;
@@ -17,9 +18,20 @@ import static java.util.Objects.nonNull;
 
 public class ModelParser {
 
+    /**
+     * Carrega o config a partir de um path no filesystem.
+     * Mantido para compatibilidade com a API pública existente.
+     */
     public static Workflow parser(InputStream modelStream, String externalConfigPath) {
+        return parser(modelStream, ConfigLoader.loadConfig(externalConfigPath));
+    }
 
-        BpmnPropertiesConfig config = ConfigLoader.loadConfig(externalConfigPath);
+    /**
+     * Overload principal: recebe o config já carregado.
+     * Preferível quando o config vem do classpath (testes, Spring Boot, JARs).
+     */
+    public static Workflow parser(InputStream modelStream, BpmnPropertiesConfig config) {
+
         BpmnPropertiesLoader bpmnProperties = new BpmnPropertiesLoader(config);
         String workflowName = null;
         String workflowId = null;
@@ -32,7 +44,12 @@ public class ModelParser {
         Map<String, Node> nodeMap = new HashMap<>();
         Map<SequenceFlow,Conclusion> conclusionMap = new HashMap<>();
 
-        BpmnModelInstance modelInstance = Bpmn.readModelFromStream(modelStream);
+        BpmnModelInstance modelInstance;
+        try {
+            modelInstance = Bpmn.readModelFromStream(modelStream);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse BPMN model stream", e);
+        }
         // find all elements of the type Participant
         ModelElementType participantType = modelInstance.getModel().getType(Participant.class);
         Collection<ModelElementInstance> participants = modelInstance.getModelElementsByType(participantType);
@@ -230,7 +247,8 @@ public class ModelParser {
                     SequenceFlow incomingEdge = incomings.iterator().next();
                     FlowNode sourceNode = incomingEdge.getSource();
                     String idSource = sourceNode.getAttributeValue("id");
-                    ActivityNode activityNode = (ActivityNode)nodeMap.get(idSource);
+                    Node rawNode = nodeMap.get(idSource);
+                    if (!(rawNode instanceof ActivityNode activityNode)) continue;
                     if (activityNode != null) {
                         for (SequenceFlow sequenceFlow : exclusiveGateway.getOutgoing()) {
                             String conclusionName = sequenceFlow.getName();
@@ -286,16 +304,16 @@ public class ModelParser {
             if (source instanceof StartEvent && target instanceof Task) {
                 Map<String, String> startEventAttributes = getAttributes(source);
                 String startProcessStatus = startEventAttributes.get("process_status");
-                ActivityNode targetNode = (ActivityNode) nodeMap.get(target.getAttributeValue("id"));
+                ActivityNode targetNode = toActivityNode(nodeMap.get(target.getAttributeValue("id")));
                 if (startProcessStatus != null && !startProcessStatus.isEmpty())
-                    workflow.addRule(new WorkflowRule(1,null, targetNode, conclusion, startProcessStatus));
+                    workflow.addRule(new WorkflowRule(START_TO_TASK,null, targetNode, conclusion, startProcessStatus));
             }
 
             // Rule 2: Task -> Task
             if ((source instanceof Task) && (target instanceof Task)) {
-                ActivityNode sourceNode = (ActivityNode) nodeMap.get(source.getAttributeValue("id"));
-                ActivityNode targetNode = (ActivityNode) nodeMap.get(target.getAttributeValue("id"));
-                workflow.addRule(new WorkflowRule(2, sourceNode, targetNode, conclusion, processStatus));
+                ActivityNode sourceNode = toActivityNode(nodeMap.get(source.getAttributeValue("id")));
+                ActivityNode targetNode = toActivityNode(nodeMap.get(target.getAttributeValue("id")));
+                workflow.addRule(new WorkflowRule(TASK_TO_TASK, sourceNode, targetNode, conclusion, processStatus));
             }
 
             // Task -> ExclusiveGateway
@@ -311,18 +329,18 @@ public class ModelParser {
                     // Merge
                     SequenceFlow outgoingEdge = outgoings.iterator().next();
                     FlowNode ruleTarget = outgoingEdge.getTarget();
-                    ActivityNode sourceNode = (ActivityNode) nodeMap.get(source.getAttributeValue("id"));
+                    ActivityNode sourceNode = toActivityNode(nodeMap.get(source.getAttributeValue("id")));
                     if (ruleTarget instanceof EndEvent) {
                         // Rule 3: Task -> Merge -> EndEvent = Final rule A
                         Map<String, String> endEventAttributes = getAttributes(ruleTarget);
                         String endProcessStatus = endEventAttributes.get("process_status");
                         if (endProcessStatus != null && !endProcessStatus.isEmpty())
-                            workflow.addRule(new WorkflowRule(3, sourceNode, null, conclusion, endProcessStatus));
+                            workflow.addRule(new WorkflowRule(TASK_TO_MERGE_TO_END, sourceNode, null, conclusion, endProcessStatus));
                     }
                     if (ruleTarget instanceof Task) {
-                        ActivityNode targetNode = (ActivityNode) nodeMap.get(ruleTarget.getAttributeValue("id"));
+                        ActivityNode targetNode = toActivityNode(nodeMap.get(ruleTarget.getAttributeValue("id")));
                         // Rule 4: Task -> Merge -> Task
-                        workflow.addRule(new WorkflowRule(4, sourceNode, targetNode, conclusion, processStatus));
+                        workflow.addRule(new WorkflowRule(TASK_TO_MERGE_TO_TASK, sourceNode, targetNode, conclusion, processStatus));
                     }
                 }
             }
@@ -335,10 +353,10 @@ public class ModelParser {
                     // Split -> Task
                     SequenceFlow incomingEdge = incomings.iterator().next();
                     FlowNode ruleSource = incomingEdge.getSource();
-                    ActivityNode sourceNode = (ActivityNode) nodeMap.get(ruleSource.getAttributeValue("id"));
-                    ActivityNode targetNode = (ActivityNode) nodeMap.get(target.getAttributeValue("id"));
+                    ActivityNode sourceNode = toActivityNode(nodeMap.get(ruleSource.getAttributeValue("id")));
+                    ActivityNode targetNode = toActivityNode(nodeMap.get(target.getAttributeValue("id")));
                     if (conclusion != null) {
-                        workflow.addRule(new WorkflowRule(5, sourceNode, targetNode, conclusion, processStatus));
+                        workflow.addRule(new WorkflowRule(SPLIT_TO_TASK, sourceNode, targetNode, conclusion, processStatus));
                     }
                 }
                 // Merge -> Task: ignore
@@ -355,18 +373,18 @@ public class ModelParser {
                     FlowNode ruleSource = incomingEdge.getSource();
                     SequenceFlow outgoingEdge = outgoings.iterator().next();
                     FlowNode ruleTarget = outgoingEdge.getTarget();
-                    ActivityNode sourceNode = (ActivityNode) nodeMap.get(ruleSource.getAttributeValue("id"));
-                    ActivityNode targetNode = (ActivityNode) nodeMap.get(ruleTarget.getAttributeValue("id"));
-                    workflow.addRule(new WorkflowRule(6, sourceNode, targetNode, conclusion, processStatus));
+                    ActivityNode sourceNode = toActivityNode(nodeMap.get(ruleSource.getAttributeValue("id")));
+                    ActivityNode targetNode = toActivityNode(nodeMap.get(ruleTarget.getAttributeValue("id")));
+                    workflow.addRule(new WorkflowRule(SPLIT_TO_MERGE, sourceNode, targetNode, conclusion, processStatus));
                 }
             }
             // Rule 7: Task -> EndEvent = Final rule B
             if ((source instanceof Task) && (target instanceof EndEvent)) {
                 Map<String, String> endEventAttributes = getAttributes(target);
                 String endProcessStatus = endEventAttributes.get("process_status");
-                ActivityNode sourceNode = (ActivityNode) nodeMap.get(source.getAttributeValue("id"));
+                ActivityNode sourceNode = toActivityNode(nodeMap.get(source.getAttributeValue("id")));
                 if (endProcessStatus != null && !endProcessStatus.isEmpty())
-                    workflow.addRule(new WorkflowRule(7, sourceNode, null, conclusion, endProcessStatus));
+                    workflow.addRule(new WorkflowRule(TASK_TO_END, sourceNode, null, conclusion, endProcessStatus));
             }
             // Rule 8: Task -> Split -> EndEvent = Final rule C
             if ((source instanceof ExclusiveGateway exclusiveGateway) && (target instanceof EndEvent)) {
@@ -376,19 +394,28 @@ public class ModelParser {
                     // Split
                     SequenceFlow incomingEdge = incomings.iterator().next();
                     FlowNode ruleSource = incomingEdge.getSource();
-                    ActivityNode sourceNode = (ActivityNode) nodeMap.get(ruleSource.getAttributeValue("id"));
+                    ActivityNode sourceNode = toActivityNode(nodeMap.get(ruleSource.getAttributeValue("id")));
                     if (ruleSource instanceof Task) {
                         // Task -> Split -> End
                         Map<String, String> endEventAttributes = getAttributes(target);
                         String endProcessStatus = endEventAttributes.get("process_status");
                         if ((endProcessStatus != null && !endProcessStatus.isEmpty()) && (conclusion != null)) {
-                            workflow.addRule(new WorkflowRule(8, sourceNode, null, conclusion, endProcessStatus));
+                            workflow.addRule(new WorkflowRule(TASK_TO_SPLIT_TO_END, sourceNode, null, conclusion, endProcessStatus));
                         }
                     }
                 }
             }
         }
         return workflow;
+    }
+
+    /**
+     * Converte um Node do mapa para ActivityNode de forma segura.
+     * Retorna null se o nó for null ou não for uma ActivityNode,
+     * evitando ClassCastException em topologias BPMN inesperadas.
+     */
+    private static ActivityNode toActivityNode(Node node) {
+        return (node instanceof ActivityNode a) ? a : null;
     }
 
     private static Map<String, String> getAttributes(BaseElement baseElement) {

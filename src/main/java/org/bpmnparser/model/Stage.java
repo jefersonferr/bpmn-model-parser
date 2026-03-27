@@ -18,7 +18,7 @@ public class Stage {
 
     @Override
     public String toString() {
-        return "Lane{" +
+        return "Stage{" +
                 "name='" + name + '\'' +
                 ", code='" + code + '\'' +
                 ", documentation='" + documentation + '\'' +

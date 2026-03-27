@@ -75,9 +75,9 @@ The `BPMNFlow` provides a lean way to "read business intent" and trigger applica
 
 ```xml
 <dependency>
-    <groupId>com.jefersonferr</groupId>
+    <groupId>org.bpmnparser</groupId>
     <artifactId>bpmn-model-parser</artifactId>
-    <version>1.0.0</version>
+    <version>1.2</version>
 </dependency>
  ```
 ### 2️⃣ Basic Usage
@@ -274,7 +274,62 @@ Let’s say you have a task for approving a purchase order. You can add the foll
   </bpmn:extensionElements>
 </bpmn:sequenceFlow>
 ```
+---
+## 💡 Use Cases
 
+### 1️⃣ Lightweight Microservices Orchestrator
+
+Instead of relying on heavy workflow engines like Camunda or Flowable, `BPMNFlow` can be used to build a **lightweight, event-driven orchestrator** for microservices architectures.
+
+This approach leverages BPMN as a **declarative flow definition**, while execution is handled by your application using messaging systems such as **RabbitMQ** or **Kafka**.
+
+---
+
+#### 🔧 How It Works
+
+The parser reads the `.bpmn` file and extracts:
+
+- Task sequence via `SequenceFlow`
+- Metadata from extension properties (e.g., `topic`, `headers`, `action`)
+- Workflow structure (tasks, decisions, transitions)
+
+---
+
+#### 🔄 Execution Flow
+
+1. The system loads the BPMN model
+2. The parser identifies the execution order of tasks
+3. For each task:
+    - A message is published to the corresponding topic (e.g., Kafka/RabbitMQ)
+4. After receiving a response:
+    - The system queries the parser to determine the next node in the workflow
+5. The flow continues until completion
+
+---
+
+#### ⚙️ Key Benefits
+
+- ⚡ No heavy BPMN engine required
+- 🔗 Native integration with event-driven architectures
+- 🧠 BPMN as a source of truth for orchestration logic
+- 📦 Fully decoupled microservices communication
+
+---
+
+#### 🧠 Example Scenario
+
+A BPMN model defines an order process:
+
+- `Validate Order` → topic: `order.validate`
+- `Process Payment` → topic: `payment.process`
+- `Ship Order` → topic: `shipping.dispatch`
+
+The parser extracts this flow, and your application orchestrates the execution by publishing and consuming events accordingly.
+
+---
+
+> 💡 This approach turns BPMN into a **lightweight orchestration blueprint**, without introducing infrastructure complexity.
+> 
 ---
 ## 🚧 What’s Next
 

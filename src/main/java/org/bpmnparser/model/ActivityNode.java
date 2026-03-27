@@ -5,6 +5,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -19,20 +20,24 @@ public class ActivityNode extends Node {
         super(name, documentation);
         this.stageCode = stageCode;
         this.activityCode = activityCode;
-        this.abbreviation = stageCode+"-"+activityCode;
+        this.abbreviation = stageCode + "-" + activityCode;
     }
 
     @Override
     public String toString() {
         return "ActivityNode{" +
-                "abbreviation='" + abbreviation + '\'' +
-                ", name='" + name + '\'' +
-                ", conclusions=" + conclusions +
-                '}';
+                "abbreviation='" + abbreviation + "'" +
+                ", name='" + name + "'" +
+                ", conclusions=" + formatConclusions() +
+                "}";
     }
 
-    public void addConclusion(Conclusion conclusion) {
-        conclusions.add(conclusion);
+    private String formatConclusions() {
+        if (conclusions.isEmpty()) return "[]";
+        return "[" + conclusions.stream()
+                .map(Object::toString)
+                .collect(Collectors.joining(", ")) + "]";
     }
 
+    public void addConclusion(Conclusion conclusion) { conclusions.add(conclusion); }
 }

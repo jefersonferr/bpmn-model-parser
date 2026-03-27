@@ -10,28 +10,39 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ConfigLoader {
+
     private static final Logger LOGGER = Logger.getLogger(ConfigLoader.class.getName());
 
+    /**
+     * Carrega o config a partir de um path no filesystem.
+     * Mantido para compatibilidade com a API pública existente.
+     */
     public static BpmnPropertiesConfig loadConfig(String externalConfigPath) {
-        Yaml yaml = new Yaml();
-        Path configPath = Path.of(externalConfigPath);
+        try (InputStream input = Files.newInputStream(Path.of(externalConfigPath))) {
+            return loadConfig(input);
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Failed to load BPMN Extension Properties Config from path: " + externalConfigPath, e);
+        }
+        return new BpmnPropertiesConfig();
+    }
 
-        try (InputStream input = Files.newInputStream(configPath)) {
-            // Load raw YAML as a Map
-            Map<String, Object> rawConfig = yaml.load(input);
-
-            // Extract only "extension_properties" from "bpmn_model_parser"
+    /**
+     * Carrega o config a partir de um InputStream.
+     * Preferível ao overload com String quando o config vem do classpath,
+     * evitando problemas de path no Windows (barra inicial em getResource().getPath()).
+     */
+    public static BpmnPropertiesConfig loadConfig(InputStream configStream) {
+        try {
+            Yaml yaml = new Yaml();
+            Map<String, Object> rawConfig = yaml.load(configStream);
             Map<String, List<ModelProperty>> extensionProperties = extractExtensionProperties(rawConfig);
-
-            // Create and return the config object
             BpmnPropertiesConfig config = new BpmnPropertiesConfig();
             config.setExtensionProperties(extensionProperties);
             return config;
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Failed to load BPMN Extension Properties Config", e);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Failed to load BPMN Extension Properties Config from stream", e);
         }
-
-        return new BpmnPropertiesConfig(); // Return empty config if loading fails
+        return new BpmnPropertiesConfig();
     }
 
     @SuppressWarnings("unchecked")
@@ -53,16 +64,13 @@ public class ConfigLoader {
         for (Map.Entry<String, Object> entry : rawExtensionProperties.entrySet()) {
             String key = entry.getKey();
             List<Object> rawList = (List<Object>) entry.getValue();
-
             List<ModelProperty> properties = new ArrayList<>();
             for (Object obj : rawList) {
                 if (obj instanceof Map) {
                     Map<String, Object> propertyMap = (Map<String, Object>) obj;
-                    ModelProperty property = mapToExtensionProperty(propertyMap);
-                    properties.add(property);
+                    properties.add(mapToExtensionProperty(propertyMap));
                 }
             }
-
             extensionProperties.put(key, properties);
         }
 

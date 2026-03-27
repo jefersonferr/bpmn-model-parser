@@ -5,6 +5,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -32,50 +33,37 @@ public class Workflow {
 
     @Override
     public String toString() {
-        return "Workflow{" +
-                "name='" + name + '\'' +
-                ", id='" + id + '\'' +
-                ", version='" + version + '\'' +
-                ", documentation='" + documentation + '\'' +
-                ", type='" + type + '\'' +
-                ", subtype='" + subtype + '\'' +
-                ", stages=" + stages +
-                ", activities=" + activities +
-                ", inconsistencies=" + inconsistencies +
-                ", rules=" + rules +
-                '}';
+        return "Workflow{\n" +
+                "  name='" + name + "'\n" +
+                "  id='" + id + "'\n" +
+                "  version='" + version + "'\n" +
+                "  documentation='" + documentation + "'\n" +
+                "  type='" + type + "'\n" +
+                "  subtype='" + subtype + "'\n" +
+                "  stages=" + formatList(stages, "  ") + "\n" +
+                "  activities=" + formatList(activities, "  ") + "\n" +
+                "  inconsistencies=" + formatList(inconsistencies, "  ") + "\n" +
+                "  rules=" + formatList(rules, "  ") + "\n" +
+                "}";
     }
 
-    public void addStage(Stage stage) {
-        stages.add(stage);
+    private static <T> String formatList(List<T> list, String indent) {
+        if (list.isEmpty()) return "[]";
+        String items = list.stream()
+                .map(item -> indent + "  " + item)
+                .collect(Collectors.joining(",\n"));
+        return "[\n" + items + "\n" + indent + "]";
     }
 
-    public int stagesSize() {
-        return stages.size();
-    }
+    public void addStage(Stage stage) { stages.add(stage); }
+    public int stagesSize() { return stages.size(); }
 
-    public void addActivity(ActivityNode activityNode) {
-        activities.add(activityNode);
-    }
+    public void addActivity(ActivityNode activityNode) { activities.add(activityNode); }
+    public int activitiesSize() { return activities.size(); }
 
-    public int activitiesSize() {
-        return activities.size();
-    }
+    public void addInconsistency(Inconsistency inconsistency) { inconsistencies.add(inconsistency); }
+    public int inconsistenciesSize() { return inconsistencies.size(); }
 
-    public void addInconsistency(Inconsistency inconsistency) {
-        inconsistencies.add(inconsistency);
-    }
-
-    public int inconsistenciesSize() {
-        return inconsistencies.size();
-    }
-
-    public void addRule(WorkflowRule workflowRule) {
-        rules.add(workflowRule);
-    }
-
-    public int rulesSize() {
-        return rules.size();
-    }
-
+    public void addRule(WorkflowRule workflowRule) { rules.add(workflowRule); }
+    public int rulesSize() { return rules.size(); }
 }

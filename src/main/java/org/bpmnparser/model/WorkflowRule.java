@@ -6,13 +6,14 @@ import lombok.Setter;
 @Getter
 @Setter
 public class WorkflowRule {
-    Integer type;
+
+    RuleType type;
     ActivityNode source;
     ActivityNode target;
     Conclusion conclusion;
     String processStatus;
 
-    public WorkflowRule(Integer type, ActivityNode source, ActivityNode target, Conclusion conclusion, String processStatus) {
+    public WorkflowRule(RuleType type, ActivityNode source, ActivityNode target, Conclusion conclusion, String processStatus) {
         this.type = type;
         this.source = source;
         this.target = target;
@@ -23,7 +24,7 @@ public class WorkflowRule {
     @Override
     public String toString() {
         return "WorkflowRule{" +
-                "type='"+ type + '\'' +
+                "type='" + type + '\'' +
                 ", source='" + ((source == null) ? "null" : source.getAbbreviation()) + '\'' +
                 ", target='" + ((target == null) ? "null" : target.getAbbreviation()) + '\'' +
                 ", conclusion='" + ((conclusion == null) ? "null" : conclusion.getCode()) + '\'' +
