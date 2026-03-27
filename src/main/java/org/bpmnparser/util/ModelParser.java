@@ -39,7 +39,7 @@ public class ModelParser {
         String workflowDocumentation = null;
         String processType = null;
         String processSubtype = null;
-        List<Stage> stages = new ArrayList<Stage>();
+        List<Stage> stages = new ArrayList<>();
         List<Inconsistency> inconsistencies = new ArrayList<>();
         Map<String, Node> nodeMap = new HashMap<>();
         Map<SequenceFlow,Conclusion> conclusionMap = new HashMap<>();
@@ -249,34 +249,32 @@ public class ModelParser {
                     String idSource = sourceNode.getAttributeValue("id");
                     Node rawNode = nodeMap.get(idSource);
                     if (!(rawNode instanceof ActivityNode activityNode)) continue;
-                    if (activityNode != null) {
-                        for (SequenceFlow sequenceFlow : exclusiveGateway.getOutgoing()) {
-                            String conclusionName = sequenceFlow.getName();
-                            Map<String, String> sequenceFlowAttributes = getAttributes(sequenceFlow);
-                            String conclusionCode = sequenceFlowAttributes.get("conclusion");
-                            boolean ok = true;
+                    for (SequenceFlow sequenceFlow : exclusiveGateway.getOutgoing()) {
+                        String conclusionName = sequenceFlow.getName();
+                        Map<String, String> sequenceFlowAttributes = getAttributes(sequenceFlow);
+                        String conclusionCode = sequenceFlowAttributes.get("conclusion");
+                        boolean ok = true;
 
-                            if (bpmnProperties.getSequenceFlow("name").isRequired()) {
-                                // inconsistency: 13
-                                if (conclusionName == null || conclusionName.isEmpty()) {
-                                    inconsistencies.add(new Inconsistency(13, "Missing attribute 'name' in element " + sequenceFlow.getId()));
-                                    ok = false;
-                                }
+                        if (bpmnProperties.getSequenceFlow("name").isRequired()) {
+                            // inconsistency: 13
+                            if (conclusionName == null || conclusionName.isEmpty()) {
+                                inconsistencies.add(new Inconsistency(13, "Missing attribute 'name' in element " + sequenceFlow.getId()));
+                                ok = false;
                             }
+                        }
 
-                            if (bpmnProperties.getSequenceFlow("conclusion").isRequired()) {
-                                // inconsistency: 14
-                                if (conclusionCode == null || conclusionCode.isEmpty()) {
-                                    inconsistencies.add(new Inconsistency(14, "Missing extension property 'conclusion' in element " + sequenceFlow.getId()));
-                                    ok = false;
-                                }
+                        if (bpmnProperties.getSequenceFlow("conclusion").isRequired()) {
+                            // inconsistency: 14
+                            if (conclusionCode == null || conclusionCode.isEmpty()) {
+                                inconsistencies.add(new Inconsistency(14, "Missing extension property 'conclusion' in element " + sequenceFlow.getId()));
+                                ok = false;
                             }
+                        }
 
-                            if (ok) {
-                                Conclusion conclusion = new Conclusion(conclusionCode, conclusionName);
-                                activityNode.addConclusion(conclusion);
-                                conclusionMap.put(sequenceFlow, conclusion);
-                            }
+                        if (ok) {
+                            Conclusion conclusion = new Conclusion(conclusionCode, conclusionName);
+                            activityNode.addConclusion(conclusion);
+                            conclusionMap.put(sequenceFlow, conclusion);
                         }
                     }
                 }
@@ -318,13 +316,8 @@ public class ModelParser {
 
             // Task -> ExclusiveGateway
             if ((source instanceof Task) && (target instanceof ExclusiveGateway exclusiveGateway)) {
-                var incomings = exclusiveGateway.getIncoming();
                 var outgoings = exclusiveGateway.getOutgoing();
-                int totalIncomings = incomings.size();
                 int totalOutgoings = outgoings.size();
-                if (totalIncomings == 1) {
-                    // Task -> Split: ignore
-                }
                 if (totalOutgoings == 1) {
                     // Merge
                     SequenceFlow outgoingEdge = outgoings.iterator().next();
@@ -419,7 +412,7 @@ public class ModelParser {
     }
 
     private static Map<String, String> getAttributes(BaseElement baseElement) {
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<>();
         ExtensionElements extensionElements = baseElement.getExtensionElements();
         if (nonNull(extensionElements)) for (ModelElementInstance elementInstance : extensionElements.getElements())
             if (elementInstance instanceof CamundaProperties camundaProperties)
