@@ -1,0 +1,17 @@
+# --- Build ---
+target/
+
+# --- IntelliJ IDEA ---
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# --- Maven ---
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# --- OS ---
+.DS_Store
+Thumbs.db
